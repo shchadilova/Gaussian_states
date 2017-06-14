@@ -2,8 +2,8 @@ from timeit import default_timer as timer
 import numpy as np
 import os
 import Grid
-import CoherentState
-import PolaronHamiltonian
+import GaussianState
+import PolaronHamiltonianGaussan
 import matplotlib
 import matplotlib.pyplot as plt
 
@@ -20,8 +20,8 @@ grid_space = Grid.Grid("SPHERICAL_2D")
 grid_space.init1d('k', dk, k_max, dk)
 grid_space.init1d('th', dtheta, np.pi, dtheta)
 
-# Initialization CoherentState
-cs = CoherentState.CoherentState(grid_space)
+# Initialization Gaussan
+gs = GaussianState.CoherentState(grid_space)
 
 # Initialization PolaronHamiltonian
 
@@ -33,7 +33,7 @@ P = 0.1
 aIBi = -10
 
 Params = [P, aIBi, mI, mB, n0, gBB]
-ham = PolaronHamiltonian.PolaronHamiltonian(cs, Params)
+ham = PolaronHamiltonianGaussan.PolaronHamiltonianGaussan(gs, Params)
 
 
 # Time evolution
@@ -48,11 +48,11 @@ NB_Vec = np.zeros(tVec.size, dtype=float)
 DynOv_Vec = np.zeros(tVec.size, dtype=complex)
 
 for ind, t in enumerate(tVec):
-    PB_Vec[ind] = cs.get_PhononMomentum()
-    NB_Vec[ind] = cs.get_PhononNumber()
-    DynOv_Vec[ind] = cs.get_DynOverlap()
+    PB_Vec[ind] = gs.get_PhononMomentum()
+    NB_Vec[ind] = gs.get_PhononNumber()
+    #DynOv_Vec[ind] = cs.get_DynOverlap()
 
-    cs.evolve(dt, ham)
+    gs.evolve(dt, ham)
 
 end = timer()
 

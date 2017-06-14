@@ -1,7 +1,7 @@
 import numpy as np
 from polaron_functions import kcos_func
 from scipy.integrate import odeint
-from PolaronHamiltonian import amplitude_update, phase_update
+from PolaronHamiltonianGaussian import amplitude_update, gamma_update
 
 
 class GaussianState:
