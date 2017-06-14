@@ -3,10 +3,30 @@ from polaron_functions import kcos_func
 from scipy.integrate import odeint
 
 
+# def amplitude_update(variables_t, t, Gaussian_state, hamiltonian):
+#     # here on can write any method induding Runge-Kutta 4
+
+#     [P, aIBi, mI, mB, n0, gBB] = hamiltonian.Params
+
+#     # Here I need an original grid
+#     dv = Gaussian_state.grid.dV()
+
+#     # Split variables into x and p
+#     [x_t, p_t] = np.split(variables_t, 2)
+#     PB_t = Gaussian_state.get_PhononMomentum()
+
+#     h_x = 2 * hamiltonian.gnum * np.sqrt(n0) * hamiltonian.Wk_grid +\
+#         x_t * (hamiltonian.Omega0_grid - hamiltonian.kcos * (P - PB_t) / mI) +\
+#         hamiltonian.gnum * hamiltonian.Wk_grid * np.dot(hamiltonian.Wk_grid, x_t * dv)
+#     h_y = p_t * (hamiltonian.Omega0_grid - hamiltonian.kcos * (P - PB_t) / mI) +\
+#         hamiltonian.gnum * hamiltonian.Wki_grid * np.dot(hamiltonian.Wki_grid, p_t * dv)
+
+#     return np.append(h_y, - h_x)
+
 def amplitude_update(variables_t, t, Gaussian_state, Hamiltonian):
     # This is a generic equation of motion for the Gaussian state
     # All the details of Hamiltonian are in the get_h_amplitude
-    return Gaussian_state.sigma @ Hamiltonian.get_h_amplitude(Gaussian_state)
+    return Gaussian_state.sigma @ Hamiltonian.get_h_amplitude(variables_t, Gaussian_state)
 
 
 def gamma_update(variables_t, t, Gaussian_state, Hamiltonian):
@@ -33,15 +53,15 @@ class GaussianState:
         # self.phase describes the global phase of the wavefunction
         self.amplitude = np.zeros(2 * self.size, dtype=float)
         self.gamma = np.asarray(np.bmat([[np.identity(self.size), np.zeros((self.size, self.size))],
-                                         [np.zeros((self.size, self.size)), np.identity(self.size)]]))
+                                         [np.zeros((self.size, self.size)), np.identity(self.size)]]), dtype=float)
         self.phase = 0
 
         # Construct the matrices of observables in the momentum basis:
         # self.kcos - momentum operator in 2D Spherical coordinates
         self.kcos = np.append(kcos_func(self.grid), kcos_func(self.grid))
         self.sigma = np.asarray(np.bmat([[np.zeros((self.size, self.size)), np.identity(self.size)],
-                                         [-1 * np.identity(self.size), np.zeros((self.size, self.size))]]))
-        self.identity = np.identity(2 * self.size)
+                                         [-1 * np.identity(self.size), np.zeros((self.size, self.size))]]), dtype=float)
+        self.identity = np.identity(2 * self.size, dtype=float)
 
     # EVOLUTION
 
@@ -56,6 +76,7 @@ class GaussianState:
 
         # Call the ODE solver
         # ODE solver works with array of equations thus the equation for self.gamma needs to be reshaped
+
         amplitude_sol = odeint(amplitude_update, self.amplitude, t, args=(self, hamiltonian),
                                atol=abserr, rtol=relerr)
         gamma_sol = odeint(gamma_update, self.gamma.reshape(self.gamma.size), t,
@@ -74,12 +95,12 @@ class GaussianState:
     def get_PhononNumber(self):
 
         return 0.5 * np.dot(self.amplitude * self.amplitude, self.dV) +\
-            0.5 * np.dot(np.diagonal(self.gamma - self.identity), self.dV)
+            0.25 * np.dot(np.diagonal(self.gamma - self.identity), self.dV)
 
     def get_PhononMomentum(self):
 
         return 0.5 * np.dot(self.kcos, self.amplitude * self.amplitude * self.dV) +\
-            0.5 * np.dot(self.kcos * np.diagonal(self.gamma - self.identity), self.dV)
+            0.25 * np.dot(self.kcos * np.diagonal(self.gamma - self.identity), self.dV)
 
     # def get_DynOverlap(self):
     #     # dynamical overlap/Ramsey interferometry signal

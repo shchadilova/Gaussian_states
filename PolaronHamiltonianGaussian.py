@@ -16,14 +16,14 @@ class PolaronHamiltonianGaussian:
         self.Wki_grid = 1 / self.Wk_grid
         self.kcos = pf.kcos_func(Gaussian_state.grid)
 
-    def get_h_amplitude(self, Gaussian_state):
+    def get_h_amplitude(self, variables_t, Gaussian_state):
 
         [P, aIBi, mI, mB, n0, gBB] = self.Params
         # Here I need an original grid
         dv = Gaussian_state.grid.dV()
 
         # Split variables into x and p
-        [x_t, p_t] = np.split(Gaussian_state.amplitude, 2)
+        [x_t, p_t] = np.split(variables_t, 2)
         PB_t = Gaussian_state.get_PhononMomentum()
 
         h_x = 2 * self.gnum * np.sqrt(n0) * self.Wk_grid +\
