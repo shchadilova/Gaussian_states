@@ -49,7 +49,7 @@ class CoherentState:
     def get_PhononMomentum(self):
 
         coherent_amplitude = self.amplitude
-        return np.dot(self.kcos, coherent_amplitude * coherent_amplitude * self.dV)
+        return 0.5 * np.dot(self.kcos, coherent_amplitude * coherent_amplitude * self.dV)
 
     def get_DynOverlap(self):
         # dynamical overlap/Ramsey interferometry signal
