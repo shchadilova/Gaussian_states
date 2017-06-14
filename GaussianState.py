@@ -3,38 +3,20 @@ from polaron_functions import kcos_func
 from scipy.integrate import odeint
 
 
-# def amplitude_update(variables_t, t, Gaussian_state, hamiltonian):
-#     # here on can write any method induding Runge-Kutta 4
+def equations_t(variables_t, t, GS, Ham):
 
-#     [P, aIBi, mI, mB, n0, gBB] = hamiltonian.Params
+    size = 2 * GS.size
+    amplitude_t = variables_t[: size]
+    gamma_t = variables_t[size:].reshape((size, size))
 
-#     # Here I need an original grid
-#     dv = Gaussian_state.grid.dV()
+    amplitude_update = GS.sigma @ Ham.get_h_amplitude(amplitude_t, gamma_t, GS)
 
-#     # Split variables into x and p
-#     [x_t, p_t] = np.split(variables_t, 2)
-#     PB_t = Gaussian_state.get_PhononMomentum()
+    right = (GS.sigma @ Ham.get_h_gamma(amplitude_t, gamma_t, GS)) @ gamma_t
+    left = gamma_t @ (Ham.get_h_gamma(amplitude_t, gamma_t, GS) @ GS.sigma)
 
-#     h_x = 2 * hamiltonian.gnum * np.sqrt(n0) * hamiltonian.Wk_grid +\
-#         x_t * (hamiltonian.Omega0_grid - hamiltonian.kcos * (P - PB_t) / mI) +\
-#         hamiltonian.gnum * hamiltonian.Wk_grid * np.dot(hamiltonian.Wk_grid, x_t * dv)
-#     h_y = p_t * (hamiltonian.Omega0_grid - hamiltonian.kcos * (P - PB_t) / mI) +\
-#         hamiltonian.gnum * hamiltonian.Wki_grid * np.dot(hamiltonian.Wki_grid, p_t * dv)
+    gamma_update = np.reshape(right - left, right.size)
 
-#     return np.append(h_y, - h_x)
-
-def amplitude_update(variables_t, t, Gaussian_state, Hamiltonian):
-    # This is a generic equation of motion for the Gaussian state
-    # All the details of Hamiltonian are in the get_h_amplitude
-    return Gaussian_state.sigma @ Hamiltonian.get_h_amplitude(variables_t, Gaussian_state)
-
-
-def gamma_update(variables_t, t, Gaussian_state, Hamiltonian):
-    # This is a generic equation of motion for the Gaussian state
-    # All the details of Hamiltonian are in the get_h_amplitude
-    right = (Gaussian_state.sigma @ Hamiltonian.get_h_gamma(Gaussian_state)) @ Gaussian_state.gamma
-    left = Gaussian_state.gamma @ (Hamiltonian.get_h_gamma(Gaussian_state) @ Gaussian_state.sigma)
-    return np.reshape(right - left, right.size)
+    return np.append(amplitude_update, gamma_update)
 
 
 class GaussianState:
@@ -74,25 +56,26 @@ class GaussianState:
         # Create the time samples for the output of the ODE solver.
         t = [0, dt]
 
-        # Call the ODE solver
+        # Call the ODE solver that solves sumultaneously for the Coherent and Gaussian parts
         # ODE solver works with array of equations thus the equation for self.gamma needs to be reshaped
 
-        amplitude_sol = odeint(amplitude_update, self.amplitude, t, args=(self, hamiltonian),
-                               atol=abserr, rtol=relerr)
-        gamma_sol = odeint(gamma_update, self.gamma.reshape(self.gamma.size), t,
-                           args=(self, hamiltonian), atol=abserr, rtol=relerr)
+        variables_t = np.append(self.amplitude, self.gamma.reshape(self.gamma.size))
+        solution = odeint(equations_t, variables_t, t,
+                          args=(self, hamiltonian), atol=abserr, rtol=relerr)
+
         # phase_sol = odeint(phase_update, self.phase, t, args=(self, hamiltonian),
         #                   atol=abserr, rtol=relerr)
 
         # Overrite the solution to its container
         # Reshape the solution to the form of its container
-        self.amplitude = amplitude_sol[-1]
-        self.gamma = gamma_sol[-1].reshape((2 * self.size, 2 * self.size))
+        self.amplitude = solution[-1][: 2 * self.size]
+        self.gamma = solution[-1][2 * self.size:].reshape((2 * self.size, 2 * self.size))
         #self.phase = phase_sol[-1]
 
     # OBSERVABLES
 
     def get_PhononNumber(self):
+        # this should be inside the Hamiltonian
 
         return 0.5 * np.dot(self.amplitude * self.amplitude, self.dV) +\
             0.25 * np.dot(np.diagonal(self.gamma - self.identity), self.dV)
