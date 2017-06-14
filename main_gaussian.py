@@ -3,7 +3,7 @@ import numpy as np
 import os
 import Grid
 import GaussianState
-import PolaronHamiltonianGaussan
+import PolaronHamiltonianGaussian
 import matplotlib
 import matplotlib.pyplot as plt
 
@@ -21,7 +21,7 @@ grid_space.init1d('k', dk, k_max, dk)
 grid_space.init1d('th', dtheta, np.pi, dtheta)
 
 # Initialization Gaussan
-gs = GaussianState.CoherentState(grid_space)
+gs = GaussianState.GaussianState(grid_space)
 
 # Initialization PolaronHamiltonian
 
@@ -33,11 +33,11 @@ P = 0.1
 aIBi = -10
 
 Params = [P, aIBi, mI, mB, n0, gBB]
-ham = PolaronHamiltonianGaussan.PolaronHamiltonianGaussan(gs, Params)
+ham = PolaronHamiltonianGaussian.PolaronHamiltonianGaussian(gs, Params)
 
 
 # Time evolution
-tMax = 100
+tMax = 10
 dt = 0.1
 
 start = timer()
