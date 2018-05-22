@@ -3,43 +3,78 @@ import numpy as np
 # ---- BASIS FUNCTIONS ----
 
 
-def ur(mI, mB):
-    return (mB * mI) / (mB + mI)
-
 
 def eB(k, mB):
+    # free boson dispersion relation
+
     return k**2 / (2 * mB)
 
 
 def w(k, gBB, mB, n0):
+    # Bogoliubov phonon dispersion relation
+
     return np.sqrt(eB(k, mB) * (eB(k, mB) + 2 * gBB * n0))
 
 
 # ---- COMPOSITE FUNCTIONS ----
 
 
-def g(grid_space, P, aIBi, mI, mB, n0, gBB):
+def g_func(grid_space, aIBi, mB, n0, gBB):
     # gives bare interaction strength constant
+
     k_max = grid_space.arrays['k'][-1]
-    mR = ur(mI, mB)
+    mR = mB
+
     return 1 / ((mR / (2 * np.pi)) * aIBi - (mR / np.pi**2) * k_max)
 
-
-def omega0(grid_space, P, aIBi, mI, mB, n0, gBB):
+def epsilon_func(grid_space, aIBi, mB, n0, gBB):
+    # gives the disprsion relation of free bosons on the grid
     names = list(grid_space.arrays.keys())
-    functions_omega0 = [lambda k: w(k, gBB, mB, n0) + (k**2 / (2 * mI)), lambda th: 0 * th + 1]
-    return grid_space.function_prod(names, functions_omega0)
+    functions_omega = [lambda k: eB(k, mB)]
 
+    return grid_space.function_prod(names, functions_omega)
 
-def Wk(grid_space, P, aIBi, mI, mB, n0, gBB):
-    #
+def omega_func(grid_space, aIBi, mB, n0, gBB):
+    # gives the disprsion relation of Bogoliubov phonons on the grid
+
     names = list(grid_space.arrays.keys())
-    functions_wk = [lambda k: np.sqrt(eB(k, mB) / w(k, gBB, mB, n0)), lambda th: 0 * th + 1]
-    return grid_space.function_prod(names, functions_wk)
+    functions_omega = [lambda k: w(k, gBB, mB, n0)]
 
+    return grid_space.function_prod(names, functions_omega)
 
-def kcos_func(grid_space):
-    #
+def wk_func(grid_space, aIBi, mB, n0, gBB):
+    # calculates interaction vertex
+
     names = list(grid_space.arrays.keys())
-    functions_kcos = [lambda k: k, np.cos]
-    return grid_space.function_prod(names, functions_kcos)
+    functions_wk = [lambda k: np.sqrt(eB(k, mB) / w(k, gBB, mB, n0))]
+    jacobian =  grid_space.jacobian()
+
+    return grid_space.function_prod(names, functions_wk)*jacobian
+
+
+def wk_inv_func(grid_space, aIBi, mB, n0, gBB):
+    # calculates interaction vertex
+
+    names = list(grid_space.arrays.keys())
+    functions_wk = [lambda k: np.sqrt(w(k, gBB, mB, n0) / eB(k, mB))]
+    jacobian = grid_space.jacobian()
+
+    return grid_space.function_prod(names, functions_wk)*jacobian
+
+
+def h_frohlich_func(gnum, wk_grid, size):
+    # Creates the linear part of the Hamiltonian (Frohlich)
+
+    return gnum * np.append(wk_grid, np.zeros(size))
+
+
+def two_phonon_func(grid_space, gnum, epsilon_grid, omega_grid, wk_grid, wk_inv_grid, size):
+    # Creates the quadratic part of the Hamiltonian (2ph)
+
+    dv = grid_space.dv()
+
+    A = np.diag(omega_grid)
+    B1 = gnum * np.outer(wk_grid, wk_grid * dv )
+    B2 = gnum * np.outer(wk_inv_grid, wk_inv_grid * dv)
+
+    return np.block([[A + B1, np.zeros((size, size))], [np.zeros((size, size)), A + B2]])

@@ -4,65 +4,99 @@ import os
 import Grid
 import GaussianState
 import PolaronHamiltonianGaussian
+
+import sys
+
 import matplotlib
 import matplotlib.pyplot as plt
 
 matplotlib.rcParams.update({'font.size': 12, 'text.usetex': True})
 
 
-# Initialization Grid
-k_max = 1
-dk = 0.1
-Ntheta = 10
-dtheta = np.pi / (Ntheta - 1)
+# ----------------------------------------
+# Grid Initialization
+# ----------------------------------------
+k_max = 10
+k_step = 0.1
 
-grid_space = Grid.Grid("SPHERICAL_2D")
-grid_space.init1d('k', dk, k_max, dk)
-grid_space.init1d('th', dtheta, np.pi, dtheta)
+grid_space = Grid.Grid("3D")
+grid_space.init1d('k', k_step, k_max, k_step)
 
-# Initialization Gaussan
+#test grid
+#print(grid_space.return_array1d('k'))
+#print(grid_space.jacobian())
+
+# ----------------------------------------
+# Initialization of the Gaussian state
+# ----------------------------------------
 gs = GaussianState.GaussianState(grid_space)
 
+# ----------------------------------------
 # Initialization PolaronHamiltonian
-
-mI = 1
+# ----------------------------------------
+# this code is for infinime mass impurity
+# thus mI and P are not parameters
 mB = 1
 n0 = 1
-gBB = (4 * np.pi / mB) * 0.05
-P = 0.1
-aIBi = -10
+gBB = (4 * np.pi / mB) * 0.065
+aIBi = -1.24729
 
-Params = [P, aIBi, mI, mB, n0, gBB]
+Params = [aIBi, mB, n0, gBB]
 ham = PolaronHamiltonianGaussian.PolaronHamiltonianGaussian(gs, Params)
 
+#print(ham.h_two_phon)
+#print(ham.gnum )
 
-# Time evolution
-tMax = 10
+# ----------------------------------------
+# Imaginary Time evolution
+# ----------------------------------------
+tMax = 100
 dt = 0.1
 
 start = timer()
 
 tVec = np.arange(0, tMax, dt)
-PB_Vec = np.zeros(tVec.size, dtype=float)
 NB_Vec = np.zeros(tVec.size, dtype=float)
-DynOv_Vec = np.zeros(tVec.size, dtype=complex)
+Zfactor_Vec = np.zeros(tVec.size, dtype=float)
+energy_vec = np.zeros(tVec.size, dtype=float)
 
 for ind, t in enumerate(tVec):
-    PB_Vec[ind] = gs.get_PhononMomentum()
     NB_Vec[ind] = gs.get_PhononNumber()
-    #DynOv_Vec[ind] = cs.get_DynOverlap()
+    Zfactor_Vec[ind] = gs.get_Zfactor()
+    energy_vec[ind] = gs.get_energy(ham)
 
-    gs.evolve(dt, ham)
+    gs.evolve_real_time(dt, ham)
+
 
 end = timer()
 
 print(end - start)
+
+print(energy_vec[-1])
+print(NB_Vec[-1])
+print(Zfactor_Vec[-1])
+
+# ----------------------------------------
+# Analysis
+# ----------------------------------------
 
 figN, axN = plt.subplots()
 axN.plot(tVec, NB_Vec, 'k-')
 axN.set_xlabel('Time ($t$)')
 axN.set_ylabel('$N_{ph}$')
 axN.set_title('Number of Phonons')
-figN.savefig('quench_PhononNumber.pdf')
+#figN.savefig('quench_PhononNumber.pdf')
+
+figZ, axZ = plt.subplots()
+axZ.plot(tVec, Zfactor_Vec, 'k-')
+axZ.set_xlabel('Time ($t$)')
+axZ.set_ylabel('$Z$')
+axZ.set_title('Zfactor')
+
+figE, axE = plt.subplots()
+axE.plot(tVec, energy_vec, 'k-')
+axE.set_xlabel('Time ($t$)')
+axE.set_ylabel('$E$')
+axE.set_title('Energy')
 
 plt.show()
