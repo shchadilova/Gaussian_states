@@ -55,6 +55,21 @@ def equations_imaginary_time_mf(variables_t, t, GS, Ham):
 
     return np.append(amplitude_update, gamma_update)
 
+def equations_real_time_mf(variables_t, t, GS, Ham):
+
+    # RESTORE MATRICES FROM ARRAYS
+    size = 2 * GS.size
+    amplitude_t = variables_t[: size]
+    gamma_t = variables_t[size:].reshape((size, size))
+
+    # CALCULATE RHS OF THE EQ OF MOTION: AMPLITUDE
+    amplitude_update = GS.sigma @ Ham.get_h_amplitude(amplitude_t, gamma_t, GS)
+
+    # NO UPDATE FOR THE GAMMA EQ. OF MOTION!
+    gamma_update = np.zeros(size*size)
+    #print(right-left)
+
+    return np.append(amplitude_update, gamma_update)
 
 class GaussianState:
     # """ This is a class that stores information about the Gaussian state """
@@ -137,6 +152,27 @@ class GaussianState:
 
         variables_t = np.append(self.amplitude, self.gamma.reshape(self.gamma.size))
         solution = odeint(equations_real_time, variables_t, t,
+                          args=(self, hamiltonian), atol=abserr, rtol=relerr)
+
+        # Overwrite the solution to its container
+        # Reshape the solution to the form of its container
+        self.amplitude = solution[-1][: 2 * self.size]
+        self.gamma = solution[-1][2 * self.size:].reshape((2 * self.size, 2 * self.size))
+
+    def evolve_real_time_mf(self, dt, hamiltonian):
+
+        # ODE solver parameters: absolute and relevant error
+        abserr = 1.0e-8
+        relerr = 1.0e-6
+
+        # Create the time samples for the output of the ODE solver.
+        t = [0, dt]
+
+        # Call the ODE solver that solves sumultaneously for the Coherent and Gaussian parts
+        # ODE solver works with array of equations thus the equation for self.gamma needs to be reshaped
+
+        variables_t = np.append(self.amplitude, self.gamma.reshape(self.gamma.size))
+        solution = odeint(equations_real_time_mf, variables_t, t,
                           args=(self, hamiltonian), atol=abserr, rtol=relerr)
 
         # Overwrite the solution to its container
