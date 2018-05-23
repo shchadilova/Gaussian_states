@@ -10,14 +10,14 @@ import sys
 import matplotlib
 import matplotlib.pyplot as plt
 
-matplotlib.rcParams.update({'font.size': 12, 'text.usetex': True})
+matplotlib.rcParams.update({'font.size': 12, 'text.usetex': True, 'image.aspect' : 0.6  })
 
 
 # ----------------------------------------
 # Load data
 # ----------------------------------------
 # -1., -0.5, -0.1, 0, 0.1, 0.5, 1., 2.
-aIBi = 2.
+aIBi = 0.
 
 dirpath = os.path.dirname(os.path.realpath(__file__))
 
@@ -43,7 +43,7 @@ dirpath = os.path.dirname(os.path.realpath(__file__))
 # size = len(NB_Vec_gs_it)
 # NB_Vec_gs_it = np.ones(size) * NB_Vec_gs_it[-1]
 # Zfactor_Vec_gs_it= np.ones(size) * Zfactor_Vec_gs_it[-1]
-Zfactor_Vec_gs_rt= np.sqrt(Zfactor_Vec_gs_rt)
+# Zfactor_Vec_gs_rt= np.sqrt(Zfactor_Vec_gs_rt)
 
 size = len(NB_Vec_mf_it)
 NB_Vec_mf_it = np.ones(size) * NB_Vec_mf_it[-1]
@@ -73,8 +73,19 @@ axZ.plot(tVec_mf_it, Zfactor_Vec_mf_it, 'k--')
 axZ.set_xlim([0,tVec_gs_rt[-1]])
 axZ.set_ylim([0,1])
 axZ.set_xlabel('Time ($t$)')
-axZ.set_ylabel('$Z$')
-axZ.set_title('Zfactor')
+axZ.set_ylabel('$|S(t)|$')
+axZ.set_title('$a_{IB}^{-1} = %.2f $' % (aIBi))
 
+
+line_gs_rt, = plt.plot(tVec_gs_rt, Zfactor_Vec_gs_rt, 'g-', label='GS')
+line_mf_rt, = plt.plot(tVec_mf_rt, Zfactor_Vec_mf_rt, 'k-', label='MF')
+# line_gs_it, = plt.plot(tVec_gs_it, Zfactor_Vec_gs_it, 'g--', label='iGS')
+line_mf_it, = plt.plot(tVec_mf_it, Zfactor_Vec_mf_it, 'k--', label='iMF')
+plt.legend([line_gs_rt, line_mf_rt, \
+            #line_gs_it,\
+            line_mf_it], \
+           ['GS: $|S(t)|$ dynamics', 'MF: $|S(t)|$ dynamics', 'GS: Ground state Z', 'MF: Ground state Z'])
+
+figZ.savefig(dirpath + '/data/Z_aIBi:%.2f.pdf' % (aIBi))
 
 plt.show()
