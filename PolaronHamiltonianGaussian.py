@@ -9,6 +9,7 @@ class PolaronHamiltonianGaussian:
 
         # Params = [aIBi, mB, n0, gBB]
         self.Params = Params
+        size = GS.size
 
         self.gnum = pf.g_func(GS.grid, *Params)
         self.epsilon_grid = pf.epsilon_func(GS.grid, *Params)
@@ -17,10 +18,17 @@ class PolaronHamiltonianGaussian:
         self.wk_inv_grid = pf.wk_inv_func(GS.grid, *Params)
 
         # creates the Frochlich part of the Hamiltonian
-        self.h_frohlich = pf.h_frohlich_func(self.gnum, self.wk_grid, GS.size)
+        self.h_frohlich = pf.h_frohlich_func(self.gnum, self.wk_grid, size)
 
         # create 2ph Hamiltonian
-        self.h_two_phon = pf.two_phonon_func(GS.grid, self.gnum, self.epsilon_grid, self.omega_grid, self.wk_grid, self.wk_inv_grid, GS.size)
+        self.h_two_phon = pf.two_phonon_func(GS.volume_k, self.gnum, self.omega_grid, self.wk_grid, self.wk_inv_grid, size)
+
+        # create Hamiltonian to evolve the pase of the wave function
+        h_omega_temp = 1. / 2 * np.conjugate(np.transpose(GS.unitary_rotation)) @ self.h_two_phon @ GS.unitary_rotation
+
+        # the resulting hamiltonian is real, so take the real part
+        self.h_omega = np.real(h_omega_temp[0:size, 0:size])
+        self.h_omega_bar = np.real(h_omega_temp[size:2 * size, 0:size])
 
     def get_h_amplitude(self, amplitude_t, gamma_t, Gaussian_state):
 
@@ -29,4 +37,7 @@ class PolaronHamiltonianGaussian:
     def get_h_gamma(self, amplitude_t, gamma_t, Gaussian_state):
 
         return self.h_two_phon
+
+
+
 
