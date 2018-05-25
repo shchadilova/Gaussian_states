@@ -85,8 +85,10 @@ class Grid:
 
         # create grid_diff from dk
         # this part creates the simplest integation cheme
-        grid_diff = self.arrays_diff[list_of_unit_vectors[0]] * np.ones(len(self.arrays[list_of_unit_vectors[0]]))
-        # for comparison purposes it is turned off  
+        grid_diff = self.arrays_diff[list_of_unit_vectors[0]] \
+                    * np.ones(len(self.arrays[list_of_unit_vectors[0]]))
+
+        # for comparison purposes it is turned off
         #grid_diff[0] = 0.5 * grid_diff[0]
         #grid_diff[-1] = 0.5 * grid_diff[-1]
 

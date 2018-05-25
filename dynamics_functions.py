@@ -5,14 +5,15 @@ import numpy as np
 
 def equations_real_time(variables_t, t, GS, Ham):
 
+    # RESTORE MATRICES FROM ARRAYS
     size = 2 * GS.size
     amplitude_t = variables_t[: size]
     gamma_t = variables_t[size:].reshape((size, size))
 
     amplitude_update = GS.sigma @ Ham.get_h_amplitude(amplitude_t, gamma_t, GS)
 
-    right = (GS.sigma @ Ham.get_h_gamma(amplitude_t, gamma_t, GS)) @ gamma_t
-    left = gamma_t @ (Ham.get_h_gamma(amplitude_t, gamma_t, GS) @ GS.sigma)
+    right = GS.sigma @ np.transpose(np.transpose(gamma_t) @ Ham.get_h_gamma(amplitude_t, gamma_t, GS) )
+    left = (gamma_t @ Ham.get_h_gamma(amplitude_t, gamma_t, GS)) @ GS.sigma
 
     gamma_update = np.reshape(right - left, size*size)
 
@@ -28,11 +29,14 @@ def equations_imaginary_time(variables_t, t, GS, Ham):
     gamma_t = variables_t[size:].reshape((size, size))
 
     # CALCULATE RHS OF THE EQ OF MOTION: AMPLITUDE
-    amplitude_update = - gamma_t @ Ham.get_h_amplitude(amplitude_t, gamma_t, GS)
+
+    amplitude_update = - gamma_t @ (Ham.get_h_amplitude(amplitude_t, gamma_t, GS))
 
     # CALCULATE RHS OF THE EQ OF MOTION: GAMMA
-    right = (np.transpose(GS.sigma) @ Ham.get_h_gamma(amplitude_t, gamma_t, GS)) @ GS.sigma
-    left = gamma_t @ (Ham.get_h_gamma(amplitude_t, gamma_t, GS) @ gamma_t)
+    dv_x_dv = np.outer(GS.dv, GS.dv)
+
+    right = (np.transpose(GS.sigma) @ (Ham.get_h_gamma(amplitude_t, gamma_t, GS)) ) @ GS.sigma
+    left = (gamma_t @ (Ham.get_h_gamma(amplitude_t, gamma_t, GS))) @ gamma_t
 
     gamma_update = np.reshape(right - left, size*size)
     #print(right-left)

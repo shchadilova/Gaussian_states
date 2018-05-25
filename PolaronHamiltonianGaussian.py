@@ -30,11 +30,11 @@ class PolaronHamiltonianGaussian:
         self.h_omega = np.real(h_omega_temp[0:size, 0:size])
         self.h_omega_bar = np.real(h_omega_temp[size:2 * size, 0:size])
 
-    def get_h_amplitude(self, amplitude_t, gamma_t, Gaussian_state):
+    def get_h_amplitude(self, amplitude_t, gamma_t, GS):
 
-        return 2*(self.h_frohlich + 1./4*self.h_two_phon @ amplitude_t + 1./4 * amplitude_t @ self.h_two_phon)
+        return 2 * self.h_frohlich + 1./2 * self.h_two_phon @ (amplitude_t * GS.dv)
 
-    def get_h_gamma(self, amplitude_t, gamma_t, Gaussian_state):
+    def get_h_gamma(self, amplitude_t, gamma_t, GS):
 
         return self.h_two_phon
 
