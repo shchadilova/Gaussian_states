@@ -194,10 +194,11 @@ class GaussianState:
         gnum = Ham.gnum
 
         dv_x_dv = np.outer(self.dv, self.dv)
+        dv_x_1 = np.outer(self.dv, np.ones(2 * self.size))
 
         energy_t =  gnum * n0 + Ham.h_frohlich @ (self.amplitude * self.dv) \
                + 1./4 *  self.amplitude @ (dv_x_dv * Ham.h_two_phon) @ self.amplitude \
-               + 1./4 * np.trace((dv_x_dv * Ham.h_two_phon) @ (self.gamma - self.identity))
+               + 1./4 * np.trace((self.gamma - self.identity) @ (dv_x_1 * Ham.h_two_phon) )
 
         return energy_t
 

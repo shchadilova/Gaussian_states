@@ -44,11 +44,11 @@ aIBi = -1.24729
 Params = [aIBi, mB, n0, gBB]
 ham = PolaronHamiltonianGaussian.PolaronHamiltonianGaussian(gs, Params)
 
-print(ham.h_omega)
-print(ham.h_omega_bar)
+# print(ham.h_omega)
+# print(ham.h_omega_bar)
 
-#print(ham.h_two_phon)
-#print(ham.gnum )
+print(ham.h_two_phon)
+print(ham.gnum)
 
 # ----------------------------------------
 # Imaginary Time evolution
@@ -81,9 +81,9 @@ print(end - start)
 # dirpath = os.path.dirname(os.path.realpath(__file__))
 # np.save(dirpath + '/data/gsrt_aIBi:%.2f.npy' % (aIBi), data)
 
-print(energy_vec[-1])
-print(NB_Vec[-1])
-print(Zfactor_Vec[-1])
+print("Energy: %.2f" % energy_vec[-1])
+print("Nb: %.2f" % NB_Vec[-1])
+print("Z: %.2f" % Zfactor_Vec[-1])
 
 # ----------------------------------------
 # Analysis

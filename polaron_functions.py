@@ -67,7 +67,7 @@ def h_frohlich_func(gnum, wk_grid, size):
     return gnum * np.append(wk_grid, np.zeros(size))
 
 
-def two_phonon_func(volume_k, gnum,  omega_grid, wk_grid, wk_inv_grid, size):
+def two_phonon_func(grid_space, gnum,  omega_grid, wk_grid, wk_inv_grid, size):
     # Creates the quadratic part of the Hamiltonian (2ph)
 
     B1 = gnum * np.outer(wk_grid, wk_grid )
@@ -75,6 +75,6 @@ def two_phonon_func(volume_k, gnum,  omega_grid, wk_grid, wk_inv_grid, size):
 
     # Kinetic energy scales with the volume of the system, keep this volume dependence explicitly
     # Note: this part should be changed in case of the finite mass corrections!
-    A = 1./volume_k * np.diag(omega_grid)
+    A = np.diag(omega_grid / grid_space.dv() )
 
     return np.block([[A + B1, np.zeros((size, size))], [np.zeros((size, size)), A + B2]])

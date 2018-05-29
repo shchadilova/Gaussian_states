@@ -21,7 +21,7 @@ class PolaronHamiltonianGaussian:
         self.h_frohlich = pf.h_frohlich_func(self.gnum, self.wk_grid, size)
 
         # create 2ph Hamiltonian
-        self.h_two_phon = pf.two_phonon_func(GS.volume_k, self.gnum, self.omega_grid, self.wk_grid, self.wk_inv_grid, size)
+        self.h_two_phon = pf.two_phonon_func(GS.grid, self.gnum, self.omega_grid, self.wk_grid, self.wk_inv_grid, size)
 
         # create Hamiltonian to evolve the pase of the wave function
         h_omega_temp = 1. / 2 * np.conjugate(np.transpose(GS.unitary_rotation)) @ self.h_two_phon @ GS.unitary_rotation
@@ -32,7 +32,7 @@ class PolaronHamiltonianGaussian:
 
     def get_h_amplitude(self, amplitude_t, gamma_t, GS):
 
-        return 2 * self.h_frohlich + 1./2 * self.h_two_phon @ (amplitude_t * GS.dv)
+        return 2 * self.h_frohlich +   self.h_two_phon @ (amplitude_t * GS.dv)
 
     def get_h_gamma(self, amplitude_t, gamma_t, GS):
 
